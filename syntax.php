@@ -49,7 +49,7 @@ class syntax_plugin_dbquery extends DokuWiki_Syntax_Plugin
         $hlp = plugin_load('helper', 'dbquery');
         try {
             $query = $hlp->loadQueryFromPage($data['name']);
-            $result = $hlp->executeQuery($query, []);
+            $result = $hlp->executeQuery($query);
         } catch (\Exception $e) {
             msg(hsc($e->getMessage()), -1);
             return true;
