@@ -27,6 +27,25 @@ class helper_plugin_dbquery extends dokuwiki\Extension\Plugin
     }
 
     /**
+     * @param string $dsn
+     * @param string $user
+     * @param string $pass
+     * @return PDO
+     * @throws \PDOException
+     */
+    public function getPDO($dsn, $user, $pass)
+    {
+        $opts = [
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC, // always fetch as array
+            PDO::ATTR_EMULATE_PREPARES => true, // emulating prepares allows us to reuse param names
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, // we want exceptions, not error codes
+        ];
+        $pdo = new PDO($dsn, $user, $pass, $opts);
+
+        return $pdo;
+    }
+
+    /**
      * Opens a database connection, executes the query and returns the result
      *
      * @param string $query
@@ -37,17 +56,10 @@ class helper_plugin_dbquery extends dokuwiki\Extension\Plugin
      */
     public function executeQuery($query)
     {
-
-        $opts = [
-            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC, // always fetch as array
-            PDO::ATTR_EMULATE_PREPARES => true, // emulating prepares allows us to reuse param names
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, // we want exceptions, not error codes
-        ];
-        $pdo = new PDO(
+        $pdo = $this->getPDO(
             $this->getConf('dsn'),
             $this->getConf('user'),
-            conf_decodeString($this->getConf('pass')),
-            $opts
+            conf_decodeString($this->getConf('pass'))
         );
 
         $params = $this->gatherVariables();
@@ -64,13 +76,23 @@ class helper_plugin_dbquery extends dokuwiki\Extension\Plugin
      *
      * @param PDO $pdo
      * @param string $sql
-     * @param string[] $parameters
+     * @param array $parameters
      * @return PDOStatement
      */
     public function prepareStatement(\PDO $pdo, $sql, $parameters)
     {
-        $sth = $pdo->prepare($sql);
+        // prepare the groups
+        $cnt = 0;
+        $groupids = [];
+        foreach ($parameters[':groups'] as $group) {
+            $id = 'group' . $cnt++;
+            $parameters[$id] = $group;
+            $groupids[] = ":$id";
+        }
+        unset($parameters[':groups']);
+        $sql = str_replace(':groups', join(',', $groupids), $sql);
 
+        $sth = $pdo->prepare($sql);
         foreach ($parameters as $key => $val) {
             if (is_array($val)) continue;
             if (is_object($val)) continue;
@@ -97,15 +119,13 @@ class helper_plugin_dbquery extends dokuwiki\Extension\Plugin
         global $INFO;
         global $INPUT;
 
-        // add leading colon
-        $id = ':' . $INFO['id'];
         return [
             ':user' => $INPUT->server->str('REMOTE_USER'),
             ':mail' => $USERINFO['mail'] ?: '',
-            ':groups' => $USERINFO['grps'] ? join(',', $USERINFO['grps']) : '', //FIXME escaping correct???
-            ':id' => $id,
-            ':page' => noNS($id),
-            ':ns' => getNS($id), //FIXME check that leading colon exists
+            ':groups' => $USERINFO['grps'] ?: [],
+            ':id' => ':' . $INFO['id'],
+            ':page' => noNS($INFO['id']),
+            ':ns' => ':' . getNS($INFO['id']),
         ];
     }
 }
