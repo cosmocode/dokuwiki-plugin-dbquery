@@ -48,16 +48,34 @@ class syntax_plugin_dbquery extends DokuWiki_Syntax_Plugin
         /** @var helper_plugin_dbquery $hlp */
         $hlp = plugin_load('helper', 'dbquery');
         try {
-            $query = $hlp->loadQueryFromPage($data['name']);
-            $result = $hlp->executeQuery($query);
+            $codes = $hlp->loadCodeBlocksFromPage($data['name']);
+            $result = $hlp->executeQuery($codes['_']);
         } catch (\Exception $e) {
             msg(hsc($e->getMessage()), -1);
             return true;
         }
 
-        $this->renderResultTable($result, $renderer);
+        if (count($result) === 1 && isset($result[0]['status']) && isset($codes[$result[0]['status']])) {
+            $this->renderStatus($result, $codes[$result[0]['status']], $renderer);
+        } else {
+            $this->renderResultTable($result, $renderer);
+        }
 
         return true;
+    }
+
+    /**
+     * Render given result via the given status HTML
+     *
+     * @param string[][] $result
+     * @param string $html
+     * @param Doku_Renderer $R
+     */
+    public function renderStatus($result, $html, Doku_Renderer $R)
+    {
+        $value = isset($result[0]['result']) ? $result[0]['result'] : '';
+        $html = str_replace(':result', hsc($value), $html);
+        $R->doc .= $html;
     }
 
     /**

@@ -11,9 +11,10 @@ class helper_plugin_dbquery extends dokuwiki\Extension\Plugin
 
     /**
      * @param string $name Page name of the query
+     * @return array
      * @throws \Exception
      */
-    public function loadQueryFromPage($name)
+    public function loadCodeBlocksFromPage($name)
     {
 
         $name = cleanID($name);
@@ -21,9 +22,8 @@ class helper_plugin_dbquery extends dokuwiki\Extension\Plugin
         if (!page_exists($id)) throw new \Exception("No query named '$name' found");
 
         $doc = p_cached_output(wikiFN($id), 'dbquery');
-        // FIXME handle additional stuff later
 
-        return trim($doc);
+        return json_decode($doc, true);
     }
 
     /**
