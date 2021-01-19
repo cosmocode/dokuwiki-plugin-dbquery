@@ -63,10 +63,14 @@ class helper_plugin_dbquery extends dokuwiki\Extension\Plugin
      * @param string $query
      * @return array
      * @throws \PDOException
-     * @todo should we allow SELECT queries only for additional security?
+     * @throws Exception
      */
     public function executeQuery($query)
     {
+        if (!preg_match('/^select /i', trim($query))) {
+            throw new \Exception('For security reasons only SELECT statements are allowed in dbquery');
+        }
+
         $pdo = $this->getPDO();
         $params = $this->gatherVariables();
         $sth = $this->prepareStatement($pdo, $query, $params);
