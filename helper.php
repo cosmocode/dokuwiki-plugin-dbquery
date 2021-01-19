@@ -8,6 +8,8 @@
  */
 class helper_plugin_dbquery extends dokuwiki\Extension\Plugin
 {
+    /** @var PDO[] do not access directly, use getPDO instead */
+    protected $pdo = [];
 
     /**
      * @param string $name Page name of the query
@@ -27,22 +29,32 @@ class helper_plugin_dbquery extends dokuwiki\Extension\Plugin
     }
 
     /**
-     * @param string $dsn
-     * @param string $user
-     * @param string $pass
+     * Return the PDO object and cache it for the request
+     *
+     * Connections data can be null to use the info from the config
+     *
+     * @param string|null $dsn
+     * @param string|null $user
+     * @param string|null $pass
      * @return PDO
-     * @throws \PDOException
      */
-    public function getPDO($dsn, $user, $pass)
+    public function getPDO($dsn = null, $user = null, $pass = null)
     {
+        $dsn = $dsn ?: $this->getConf('dsn');
+        $user = $user ?: $this->getConf('user');
+        $pass = $pass ?: conf_decodeString($this->getConf('pass'));
+        $conid = md5($dsn . $user . $pass);
+
+        if (isset($this->pdo[$conid])) return $this->pdo[$conid];
+
         $opts = [
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC, // always fetch as array
             PDO::ATTR_EMULATE_PREPARES => true, // emulating prepares allows us to reuse param names
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, // we want exceptions, not error codes
         ];
-        $pdo = new PDO($dsn, $user, $pass, $opts);
 
-        return $pdo;
+        $this->pdo[$conid] = new PDO($dsn, $user, $pass, $opts);
+        return $this->pdo[$conid];
     }
 
     /**
@@ -51,17 +63,11 @@ class helper_plugin_dbquery extends dokuwiki\Extension\Plugin
      * @param string $query
      * @return array
      * @throws \PDOException
-     * @todo should we keep the DB connection around for subsequent queries?
      * @todo should we allow SELECT queries only for additional security?
      */
     public function executeQuery($query)
     {
-        $pdo = $this->getPDO(
-            $this->getConf('dsn'),
-            $this->getConf('user'),
-            conf_decodeString($this->getConf('pass'))
-        );
-
+        $pdo = $this->getPDO();
         $params = $this->gatherVariables();
         $sth = $this->prepareStatement($pdo, $query, $params);
         $sth->execute();
