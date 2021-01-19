@@ -29,13 +29,13 @@ class syntax_plugin_dbquery extends DokuWiki_Syntax_Plugin
     /** @inheritDoc */
     public function connectTo($mode)
     {
-        $this->Lexer->addSpecialPattern('QUERY:\w+', $mode, 'plugin_dbquery');
+        $this->Lexer->addSpecialPattern('{{QUERY:\w+}}', $mode, 'plugin_dbquery');
     }
 
     /** @inheritDoc */
     public function handle($match, $state, $pos, Doku_Handler $handler)
     {
-        return ['name' => substr($match, 6)];
+        return ['name' => substr($match, 8, -2)];
     }
 
     /** @inheritDoc */
