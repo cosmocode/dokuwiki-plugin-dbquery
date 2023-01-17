@@ -38,10 +38,20 @@ class renderer_plugin_dbquery extends \Doku_Renderer
         }
     }
 
+    /** @inheritdoc */
+    public function document_start()
+    {
+        parent::document_start();
+        $this->info['dbquery']['transpose'] = false;
+    }
+
     /** @inheritDoc */
     public function document_end()
     {
-        $this->doc = json_encode($this->codeBlocks);
+        $this->doc = json_encode([
+            'codeblocks' => $this->codeBlocks,
+            'macros' => $this->info['dbquery'],
+        ]);
     }
 
 }

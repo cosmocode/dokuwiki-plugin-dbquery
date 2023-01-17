@@ -16,7 +16,7 @@ class helper_plugin_dbquery extends dokuwiki\Extension\Plugin
      * @return array
      * @throws \Exception
      */
-    public function loadCodeBlocksFromPage($name)
+    public function loadDataFromPage($name)
     {
 
         $name = cleanID($name);

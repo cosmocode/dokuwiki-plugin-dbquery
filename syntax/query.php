@@ -6,7 +6,7 @@
  * @license GPL 2 http://www.gnu.org/licenses/gpl-2.0.html
  * @author  Andreas Gohr <dokuwiki@cosmocode.de>
  */
-class syntax_plugin_dbquery extends DokuWiki_Syntax_Plugin
+class syntax_plugin_dbquery_query extends DokuWiki_Syntax_Plugin
 {
     /** @inheritDoc */
     public function getType()
@@ -29,7 +29,7 @@ class syntax_plugin_dbquery extends DokuWiki_Syntax_Plugin
     /** @inheritDoc */
     public function connectTo($mode)
     {
-        $this->Lexer->addSpecialPattern('{{QUERY:\w+}}', $mode, 'plugin_dbquery');
+        $this->Lexer->addSpecialPattern('{{QUERY:\w+}}', $mode, 'plugin_dbquery_query');
     }
 
     /** @inheritDoc */
@@ -48,17 +48,21 @@ class syntax_plugin_dbquery extends DokuWiki_Syntax_Plugin
         /** @var helper_plugin_dbquery $hlp */
         $hlp = plugin_load('helper', 'dbquery');
         try {
-            $codes = $hlp->loadCodeBlocksFromPage($data['name']);
-            $result = $hlp->executeQuery($codes['_']);
+            $qdata = $hlp->loadDataFromPage($data['name']);
+            $result = $hlp->executeQuery($qdata['codeblocks']['_']);
         } catch (\Exception $e) {
             msg(hsc($e->getMessage()), -1);
             return true;
         }
 
-        if (count($result) === 1 && isset($result[0]['status']) && isset($codes[$result[0]['status']])) {
-            $this->renderStatus($result, $codes[$result[0]['status']], $renderer);
+        if (count($result) === 1 && isset($result[0]['status']) && isset($qdata['codeblocks'][$result[0]['status']])) {
+            $this->renderStatus($result, $qdata['codeblocks'][$result[0]['status']], $renderer);
         } else {
-            $this->renderResultTable($result, $renderer);
+            if ($qdata['macros']['transpose']) {
+                $this->renderTransposedResultTable($result, $renderer);
+            } else {
+                $this->renderResultTable($result, $renderer);
+            }
         }
 
         return true;
@@ -113,5 +117,41 @@ class syntax_plugin_dbquery extends DokuWiki_Syntax_Plugin
         }
         $R->table_close();
     }
+
+    /**
+     * Render the given result as a table, but turned 90 degrees
+     *
+     * @param string[][] $result
+     * @param Doku_Renderer $R
+     */
+    public function renderTransposedResultTable($result, Doku_Renderer $R)
+    {
+        global $lang;
+
+        if (!count($result)) {
+            $R->cdata($lang['nothingfound']);
+            return;
+        }
+
+        $width = count($result[0]);
+        $height = count($result);
+
+        $R->table_open();
+        for ($x = 0; $x < $width; $x++) {
+            $R->tablerow_open();
+            $R->tableheader_open();
+            $R->cdata(array_keys($result[0])[$x]);
+            $R->tableheader_close();
+
+            for ($y = 0; $y < $height; $y++) {
+                $R->tablecell_open();
+                $R->cdata(array_values($result[$y])[$x]);
+                $R->tablecell_close();
+            }
+            $R->tablerow_close();
+        }
+        $R->table_close();
+    }
+
 }
 
