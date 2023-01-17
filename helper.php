@@ -131,8 +131,8 @@ class helper_plugin_dbquery extends dokuwiki\Extension\Plugin
 
         return [
             ':user' => $INPUT->server->str('REMOTE_USER'),
-            ':mail' => $USERINFO['mail'] ?: '',
-            ':groups' => $USERINFO['grps'] ?: [],
+            ':mail' => $USERINFO['mail'] ?? '',
+            ':groups' => $USERINFO['grps'] ?? [],
             ':id' => ':' . $INFO['id'],
             ':page' => noNS($INFO['id']),
             ':ns' => ':' . getNS($INFO['id']),

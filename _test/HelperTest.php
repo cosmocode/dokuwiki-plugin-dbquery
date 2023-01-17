@@ -1,19 +1,22 @@
 <?php
+namespace dokuwiki\plugin\dbquery\test;
+
+use DokuWikiTest;
 
 /**
- * Tests for the dbquery plugin helper plugin
+ * General tests for the dbquery plugin
  *
  * @group plugin_dbquery
  * @group plugins
  */
-class helper_plugin_dbquery_test extends DokuWikiTest
+class HelperTest extends DokuWikiTest
 {
     protected $pluginsEnabled = array('dbquery');
-    /** @var helper_plugin_dbquery $hlp */
+    /** @var \helper_plugin_dbquery $hlp */
     protected $hlp;
 
     /** @inheritDoc */
-    public function setUp()
+    public function setUp(): void
     {
         parent::setUp();
         $this->hlp = plugin_load('helper', 'dbquery');
@@ -39,7 +42,7 @@ class helper_plugin_dbquery_test extends DokuWikiTest
     public function testGatherVariablesUser()
     {
         global $INFO;
-        /** @var auth_plugin_authplain $auth */
+        /** @var \auth_plugin_authplain $auth */
         global $auth;
 
         $INFO['id'] = 'foo:bar:baz';
