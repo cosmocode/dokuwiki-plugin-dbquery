@@ -110,7 +110,7 @@ class syntax_plugin_dbquery_query extends DokuWiki_Syntax_Plugin
             $R->tablerow_open();
             foreach ($row as $cell) {
                 $R->tablecell_open();
-                $R->cdata($cell);
+                $this->cellFormat($cell, $R);
                 $R->tablecell_close();
             }
             $R->tablerow_close();
@@ -145,7 +145,7 @@ class syntax_plugin_dbquery_query extends DokuWiki_Syntax_Plugin
 
             for ($y = 0; $y < $height; $y++) {
                 $R->tablecell_open();
-                $R->cdata(array_values($result[$y])[$x]);
+                $this->cellFormat(array_values($result[$y])[$x], $R);
                 $R->tablecell_close();
             }
             $R->tablerow_close();
@@ -153,5 +153,36 @@ class syntax_plugin_dbquery_query extends DokuWiki_Syntax_Plugin
         $R->table_close();
     }
 
+    /**
+     * Pass the given cell content to the correct renderer call
+     *
+     * Detects a subset of the wiki link syntax
+     *
+     * @param string $content
+     * @param Doku_Renderer $R
+     * @return void
+     */
+    protected function cellFormat($content, Doku_Renderer $R)
+    {
+        // external urls
+        if (preg_match('/^\[\[(https?:\/\/[^|\]]+)(|.*?)?]]$/', $content, $m)) {
+            $url = $m[1];
+            $title = $m[2] ?? '';
+            $title = trim($title,'|');
+            $R->externallink($url, $title);
+            return;
+        }
+
+        // internal urls
+        if (preg_match('/^\[\[([^|\]]+)(|.*?)?]]$/', $content, $m)) {
+            $page = cleanID($m[1]);
+            $title = $m[2] ?? '';
+            $title = trim($title,'|');
+            $R->internallink($page, $title);
+            return;
+        }
+
+        $R->cdata($content);
+    }
 }
 
