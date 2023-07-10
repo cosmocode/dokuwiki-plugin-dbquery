@@ -98,6 +98,7 @@ class syntax_plugin_dbquery_query extends DokuWiki_Syntax_Plugin
         }
 
         $R->table_open();
+        $R->tablethead_open();
         $R->tablerow_open();
         foreach (array_keys($result[0]) as $header) {
             $R->tableheader_open();
@@ -105,7 +106,9 @@ class syntax_plugin_dbquery_query extends DokuWiki_Syntax_Plugin
             $R->tableheader_close();
         }
         $R->tablerow_close();
+        $R->tablethead_close();
 
+        $R->tabletbody_open();
         foreach ($result as $row) {
             $R->tablerow_open();
             foreach ($row as $cell) {
@@ -115,6 +118,7 @@ class syntax_plugin_dbquery_query extends DokuWiki_Syntax_Plugin
             }
             $R->tablerow_close();
         }
+        $R->tabletbody_close();
         $R->table_close();
     }
 
