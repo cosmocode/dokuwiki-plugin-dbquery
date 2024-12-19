@@ -42,7 +42,12 @@ class syntax_plugin_dbquery_macro extends \dokuwiki\Extension\SyntaxPlugin
     /** @inheritDoc */
     public function render($mode, Doku_Renderer $renderer, $data)
     {
-        $renderer->info['dbquery'][$data[0]] = true;
+        [$name, $value] = sexplode('=', $data[0], 2);
+        $name = trim($name);
+        $value = trim($value);
+        if(!$value) $value = true;
+
+        $renderer->info['dbquery'][$name] = $value;
         return true;
     }
 }

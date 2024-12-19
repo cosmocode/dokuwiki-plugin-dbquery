@@ -40,6 +40,6 @@ class QueryTest extends DokuWikiTest
 
         $this->callInaccessibleMethod($plugin, 'cellFormat', [$content, $R]);
 
-        $this->assertRegExp($expect, $R->doc);
+        $this->assertMatchesRegularExpression($expect, $R->doc);
     }
 }

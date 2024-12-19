@@ -6,7 +6,7 @@
  */
 
 $meta['namespace'] = ['string'];
-$meta['dsn'] = ['string'];
+$meta['dsn'] = [];
 $meta['user'] = ['string'];
 $meta['pass'] = ['password'];
 

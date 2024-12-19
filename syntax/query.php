@@ -49,7 +49,7 @@ class syntax_plugin_dbquery_query extends DokuWiki_Syntax_Plugin
         $hlp = plugin_load('helper', 'dbquery');
         try {
             $qdata = $hlp->loadDataFromPage($data['name']);
-            $result = $hlp->executeQuery($qdata['codeblocks']['_']);
+            $result = $hlp->executeQuery($qdata['codeblocks']['_'], $qdata['macros']['dsn'] ?? null);
         } catch (\Exception $e) {
             msg(hsc($e->getMessage()), -1);
             return true;

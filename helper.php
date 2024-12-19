@@ -65,13 +65,14 @@ class helper_plugin_dbquery extends dokuwiki\Extension\Plugin
      * @throws \PDOException
      * @throws Exception
      */
-    public function executeQuery($query)
+    public function executeQuery($query, $dsnalias = null)
     {
         if (!preg_match('/^select /i', trim($query))) {
             throw new \Exception('For security reasons only SELECT statements are allowed in dbquery');
         }
 
-        $pdo = $this->getPDO();
+        [$dsn, $user, $pass] = $this->getDSN($dsnalias);
+        $pdo = $this->getPDO($dsn, $user, $pass);
         $params = $this->gatherVariables();
         $sth = $this->prepareStatement($pdo, $query, $params);
         $sth->execute();
@@ -137,5 +138,70 @@ class helper_plugin_dbquery extends dokuwiki\Extension\Plugin
             ':page' => noNS($INFO['id']),
             ':ns' => ':' . getNS($INFO['id']),
         ];
+    }
+
+    /**
+     * Get the DSN, user and pass for a given alias
+     *
+     * @param string|null $alias null for default
+     * @return [string, string, string] DSN, user, pass
+     * @throws Exception
+     */
+    public function getDSN($alias = null)
+    {
+        static $aliases = null;
+        if ($aliases === null) {
+            $aliases = $this->getDsnAliases(
+                $this->getConf('dsn'),
+                $this->getConf('user'),
+                $this->getConf('pass')
+            );
+        }
+
+        if ($aliases === []) throw new \Exception('No DSN aliases defined');
+
+        if ($alias === null || !isset($aliases[$alias])) {
+            $alias = '_';
+        }
+
+        return [$aliases[$alias]['dsn'], $aliases[$alias]['user'], $aliases[$alias]['pass']];
+    }
+
+    /**
+     * Load and parse the DSN configuration
+     *
+     * @param string $config
+     * @param string $defaultuser
+     * @param string $defaultpass
+     * @return array
+     */
+    protected function getDsnAliases($config, $defaultuser, $defaultpass)
+    {
+        $aliases = [];
+        $lines = explode("\n", $config);
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if (!$line) continue;
+            $parts = preg_split('/\s+/', $line, 4);
+
+            if (count($parts) > 1) {
+                $aliases[$parts[0]] = [
+                    'dsn' => $parts[1],
+                    'user' => $parts[2] ?? $defaultuser,
+                    'pass' => $parts[3] ?? $defaultpass
+                ];
+            } else {
+                $parts = ['', $parts[0]];
+            }
+
+            if (!isset($aliases['_'])) {
+                $aliases['_'] = [
+                    'dsn' => $parts[1],
+                    'user' => $parts[2] ?? $defaultuser,
+                    'pass' => $parts[3] ?? $defaultpass
+                ];
+            }
+        }
+        return $aliases;
     }
 }

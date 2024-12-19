@@ -80,4 +80,33 @@ class HelperTest extends DokuWikiTest
         $expected = 'SELECT :user, :mail, :id, :page, :ns WHERE \'foo\' in (:group0,:group1,:group2)';
         $this->assertEquals($expected, $actual);
     }
+
+    public function testGetDsnAliases()
+    {
+        $conf = "nouser mysql:host=localhost;port=3306;dbname=testdb1\n\n".
+                "nopass mysql:host=localhost;port=3306;dbname=testdb2 user\n".
+                "both mysql:host=localhost;port=3306;dbname=testdb3 user pass\n";
+
+        $expect = [
+            '_' => ['dsn' => 'mysql:host=localhost;port=3306;dbname=testdb1', 'user' => 'dfu', 'pass' => 'dfp'],
+            'nouser' => ['dsn' => 'mysql:host=localhost;port=3306;dbname=testdb1', 'user' => 'dfu', 'pass' => 'dfp'],
+            'nopass' => ['dsn' => 'mysql:host=localhost;port=3306;dbname=testdb2', 'user' => 'user', 'pass' => 'dfp'],
+            'both' => ['dsn' => 'mysql:host=localhost;port=3306;dbname=testdb3', 'user' => 'user', 'pass' => 'pass'],
+        ];
+
+        $actual = $this->callInaccessibleMethod($this->hlp, 'getDsnAliases', [$conf, 'dfu', 'dfp']);
+        $this->assertEquals($expect, $actual);
+    }
+
+    public function testGetDsnAliasesLegacy()
+    {
+        $conf = 'mysql:host=localhost;port=3306;dbname=testdb1';
+
+        $expect = [
+            '_' => ['dsn' => 'mysql:host=localhost;port=3306;dbname=testdb1', 'user' => 'dfu', 'pass' => 'dfp'],
+        ];
+
+        $actual = $this->callInaccessibleMethod($this->hlp, 'getDsnAliases', [$conf, 'dfu', 'dfp']);
+        $this->assertEquals($expect, $actual);
+    }
 }
