@@ -1,12 +1,14 @@
 <?php
 
+use dokuwiki\Extension\SyntaxPlugin;
+
 /**
  * DokuWiki Plugin dbquery (Syntax Component)
  *
  * @license GPL 2 http://www.gnu.org/licenses/gpl-2.0.html
  * @author  Andreas Gohr <dokuwiki@cosmocode.de>
  */
-class syntax_plugin_dbquery_query extends DokuWiki_Syntax_Plugin
+class syntax_plugin_dbquery_query extends SyntaxPlugin
 {
     /** @inheritDoc */
     public function getType()
@@ -57,12 +59,10 @@ class syntax_plugin_dbquery_query extends DokuWiki_Syntax_Plugin
 
         if (count($result) === 1 && isset($result[0]['status']) && isset($qdata['codeblocks'][$result[0]['status']])) {
             $this->renderStatus($result, $qdata['codeblocks'][$result[0]['status']], $renderer);
+        } elseif ($qdata['macros']['transpose']) {
+            $this->renderTransposedResultTable($result, $renderer);
         } else {
-            if ($qdata['macros']['transpose']) {
-                $this->renderTransposedResultTable($result, $renderer);
-            } else {
-                $this->renderResultTable($result, $renderer);
-            }
+            $this->renderResultTable($result, $renderer);
         }
 
         return true;
@@ -77,7 +77,7 @@ class syntax_plugin_dbquery_query extends DokuWiki_Syntax_Plugin
      */
     public function renderStatus($result, $html, Doku_Renderer $R)
     {
-        $value = isset($result[0]['result']) ? $result[0]['result'] : '';
+        $value = $result[0]['result'] ?? '';
         $html = str_replace(':result', hsc($value), $html);
         $R->doc .= $html;
     }
@@ -172,7 +172,7 @@ class syntax_plugin_dbquery_query extends DokuWiki_Syntax_Plugin
         if (preg_match('/^\[\[(https?:\/\/[^|\]]+)(|.*?)?]]$/', $content, $m)) {
             $url = $m[1];
             $title = $m[2] ?? '';
-            $title = trim($title,'|');
+            $title = trim($title, '|');
             $R->externallink($url, $title);
             return;
         }
@@ -181,7 +181,7 @@ class syntax_plugin_dbquery_query extends DokuWiki_Syntax_Plugin
         if (preg_match('/^\[\[([^|\]]+)(|.*?)?]]$/', $content, $m)) {
             $page = cleanID($m[1]);
             $title = $m[2] ?? '';
-            $title = trim($title,'|');
+            $title = trim($title, '|');
             $R->internallink($page, $title);
             return;
         }
@@ -189,4 +189,3 @@ class syntax_plugin_dbquery_query extends DokuWiki_Syntax_Plugin
         $R->cdata($content);
     }
 }
-

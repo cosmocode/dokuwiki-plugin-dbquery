@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Options for the dbquery plugin
  *
@@ -9,5 +10,3 @@ $meta['namespace'] = ['string'];
 $meta['dsn'] = [];
 $meta['user'] = ['string'];
 $meta['pass'] = ['password'];
-
-

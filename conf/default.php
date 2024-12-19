@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Default settings for the dbquery plugin
  *
@@ -9,4 +10,3 @@ $conf['namespace'] = 'dbquery';
 $conf['dsn'] = '';
 $conf['user'] = '';
 $conf['pass'] = '';
-

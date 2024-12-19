@@ -1,12 +1,14 @@
 <?php
 
+use dokuwiki\Extension\SyntaxPlugin;
+
 /**
  * DokuWiki Plugin dbquery (Syntax Component)
  *
  * @license GPL 2 http://www.gnu.org/licenses/gpl-2.0.html
  * @author  Andreas Gohr <dokuwiki@cosmocode.de>
  */
-class syntax_plugin_dbquery_macro extends \dokuwiki\Extension\SyntaxPlugin
+class syntax_plugin_dbquery_macro extends SyntaxPlugin
 {
     /** @inheritDoc */
     public function getType()
@@ -45,10 +47,9 @@ class syntax_plugin_dbquery_macro extends \dokuwiki\Extension\SyntaxPlugin
         [$name, $value] = sexplode('=', $data[0], 2);
         $name = trim($name);
         $value = trim($value);
-        if(!$value) $value = true;
+        if (!$value) $value = true;
 
         $renderer->info['dbquery'][$name] = $value;
         return true;
     }
 }
-

@@ -10,7 +10,6 @@
  */
 class renderer_plugin_dbquery extends \Doku_Renderer
 {
-
     protected $codeBlocks = [];
     protected $lastHeader = '';
 
@@ -53,5 +52,4 @@ class renderer_plugin_dbquery extends \Doku_Renderer
             'macros' => $this->info['dbquery'],
         ]);
     }
-
 }

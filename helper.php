@@ -1,12 +1,14 @@
 <?php
 
+use dokuwiki\Extension\Plugin;
+
 /**
  * DokuWiki Plugin dbquery (Helper Component)
  *
  * @license GPL 2 http://www.gnu.org/licenses/gpl-2.0.html
  * @author  Andreas Gohr <dokuwiki@cosmocode.de>
  */
-class helper_plugin_dbquery extends dokuwiki\Extension\Plugin
+class helper_plugin_dbquery extends Plugin
 {
     /** @var PDO[] do not access directly, use getPDO instead */
     protected $pdo = [];
@@ -76,6 +78,7 @@ class helper_plugin_dbquery extends dokuwiki\Extension\Plugin
         $params = $this->gatherVariables();
         $sth = $this->prepareStatement($pdo, $query, $params);
         $sth->execute();
+
         $data = $sth->fetchAll(PDO::FETCH_ASSOC);
         $sth->closeCursor();
 
@@ -101,13 +104,13 @@ class helper_plugin_dbquery extends dokuwiki\Extension\Plugin
             $groupids[] = ":$id";
         }
         unset($parameters[':groups']);
-        $sql = str_replace(':groups', join(',', $groupids), $sql);
+        $sql = str_replace(':groups', implode(',', $groupids), $sql);
 
         $sth = $pdo->prepare($sql);
         foreach ($parameters as $key => $val) {
             if (is_array($val)) continue;
             if (is_object($val)) continue;
-            if (strpos($sql, $key) === false) continue; // skip if parameter is missing
+            if (!str_contains($sql, $key)) continue; // skip if parameter is missing
 
             if (is_int($val)) {
                 $sth->bindValue($key, $val, PDO::PARAM_INT);
