@@ -1,7 +1,7 @@
 base   dbquery
 author Andreas Gohr
 email  dokuwiki@cosmocode.de
-date   2024-12-19
+date   2025-01-07
 name   dbquery plugin
 desc   Display query results from a database
 url    https://www.dokuwiki.org/plugin:dbquery
