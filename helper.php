@@ -69,7 +69,7 @@ class helper_plugin_dbquery extends Plugin
      */
     public function executeQuery($query, $dsnalias = null)
     {
-        if (!preg_match('/^select /i', trim($query))) {
+        if (!preg_match('/^select(\s|$)/i', trim($query))) {
             throw new \Exception('For security reasons only SELECT statements are allowed in dbquery');
         }
 
