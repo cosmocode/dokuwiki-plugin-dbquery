@@ -101,6 +101,7 @@ class syntax_plugin_dbquery_query extends SyntaxPlugin
         $R->tablethead_open();
         $R->tablerow_open();
         foreach (array_keys($result[0]) as $header) {
+            $header = preg_replace('/_wiki$/', ' ', $header); // remove _wiki type suffix
             $R->tableheader_open();
             $R->cdata($header);
             $R->tableheader_close();
@@ -111,9 +112,9 @@ class syntax_plugin_dbquery_query extends SyntaxPlugin
         $R->tabletbody_open();
         foreach ($result as $row) {
             $R->tablerow_open();
-            foreach ($row as $cell) {
+            foreach ($row as $col =>  $cell) {
                 $R->tablecell_open();
-                $this->cellFormat($cell, $R);
+                $this->cellFormat($cell, $R, $col);
                 $R->tablecell_close();
             }
             $R->tablerow_close();
@@ -142,14 +143,17 @@ class syntax_plugin_dbquery_query extends SyntaxPlugin
 
         $R->table_open();
         for ($x = 0; $x < $width; $x++) {
+            $col = array_keys($result[0])[$x];
+            $header = preg_replace('/_wiki$/', ' ', $col); // remove _wiki type suffix
+
             $R->tablerow_open();
             $R->tableheader_open();
-            $R->cdata(array_keys($result[0])[$x]);
+            $R->cdata($header);
             $R->tableheader_close();
 
             for ($y = 0; $y < $height; $y++) {
                 $R->tablecell_open();
-                $this->cellFormat(array_values($result[$y])[$x], $R);
+                $this->cellFormat(array_values($result[$y])[$x], $R, $col);
                 $R->tablecell_close();
             }
             $R->tablerow_close();
@@ -164,10 +168,21 @@ class syntax_plugin_dbquery_query extends SyntaxPlugin
      *
      * @param string $content
      * @param Doku_Renderer $R
+     * @param string $name Name of the selected column
      * @return void
      */
-    protected function cellFormat($content, Doku_Renderer $R)
+    protected function cellFormat($content, Doku_Renderer $R, $name)
     {
+        if(trim($content) === '') {
+            return;
+        }
+
+        // parse wiki syntax
+        if(str_ends_with($name, '_wiki')) {
+            $this->renderInject($R, $content);
+            return;
+        }
+
         // external urls
         if (preg_match('/^\[\[(https?:\/\/[^|\]]+)(|.*?)?]]$/', $content, $m)) {
             $url = $m[1];
@@ -187,5 +202,35 @@ class syntax_plugin_dbquery_query extends SyntaxPlugin
         }
 
         $R->cdata($content);
+    }
+
+    /**
+     * Injects the given syntax into the current renderer
+     *
+     * @param Doku_Renderer $R
+     * @param string $syntax
+     * @return void
+     */
+    protected function renderInject(Doku_Renderer $R, $syntax)
+    {
+        $instructions = p_get_instructions($syntax);
+        foreach ($instructions as $instruction) {
+            // not these
+            if(in_array($instruction[0], ['document_start', 'document_end'])) {
+                continue;
+            }
+
+            // no headers
+            if($instruction[0] === 'header') {
+                $R->p_open();
+                $R->strong_open();
+                $R->cdata($instruction[1][0]);
+                $R->strong_close();
+                $R->p_close();
+                continue;
+            }
+
+            call_user_func_array([$R, $instruction[0]], $instruction[1]);
+        }
     }
 }

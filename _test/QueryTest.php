@@ -38,7 +38,33 @@ class QueryTest extends DokuWikiTest
         $plugin = new \syntax_plugin_dbquery_query();
         $R = new \Doku_Renderer_xhtml();
 
-        $this->callInaccessibleMethod($plugin, 'cellFormat', [$content, $R]);
+        $this->callInaccessibleMethod($plugin, 'cellFormat', [$content, $R, 'content']);
+
+        $this->assertRegExp($expect, $R->doc);
+    }
+
+    /**
+     * @see testWikiParsing
+     */
+    public function provideWikiContent()
+    {
+        return [
+            ['**bold**', '/<strong>bold<\/strong>/'],
+            ['//italic//', '/<em>italic<\/em>/'],
+            ['===== head =====', '/<p>\s*<strong>head<\/strong>\s*<\/p>/'],
+            ['  * list item', '/<ul>\s*<li.*><div class="li">\s*list item<\/div>\s*<\/li>\s*<\/ul>/'],
+        ];
+    }
+
+    /**
+     * @dataProvider provideWikiContent
+     */
+    public function testWikiParsing($content, $expect)
+    {
+        $plugin = new \syntax_plugin_dbquery_query();
+        $R = new \Doku_Renderer_xhtml();
+
+        $this->callInaccessibleMethod($plugin, 'cellFormat', [$content, $R, 'content_wiki']);
 
         $this->assertRegExp($expect, $R->doc);
     }
