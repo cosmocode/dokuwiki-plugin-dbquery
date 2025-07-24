@@ -42,9 +42,17 @@ class helper_plugin_dbquery extends Plugin
      */
     public function getPDO($dsn = null, $user = null, $pass = null)
     {
+        global $conf;
+
         $dsn = $dsn ?: $this->getConf('dsn');
         $user = $user ?: $this->getConf('user');
         $pass = $pass ?: conf_decodeString($this->getConf('pass'));
+        // placeholders for use with sqlite
+        $dsn = str_replace(
+            ['%DATA_DIR%', '%META_DIR%'],
+            [fullpath($conf['savedir']), fullpath($conf['metadir'])],
+            $dsn
+        );
         $conid = md5($dsn . $user . $pass);
 
         if (isset($this->pdo[$conid])) return $this->pdo[$conid];
